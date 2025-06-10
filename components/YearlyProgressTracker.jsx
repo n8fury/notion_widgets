@@ -36,19 +36,20 @@ const YearlyProgressTracker = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Create 24 diamonds (4 rows × 6 columns)
-  const totalDiamonds = 24;
+  // Create 182 diamonds (26 columns × 7 rows)
+  const totalDiamonds = 182;
   const filledDiamonds = Math.round((progress / 100) * totalDiamonds);
 
   const diamonds = Array.from({ length: totalDiamonds }, (_, index) => {
     const isFilled = index < filledDiamonds;
     return (
-      <div
-        key={index}
-        className={`w-3 h-3 transform rotate-45 ${
-          isFilled ? 'bg-gray-800' : 'bg-gray-200'
-        }`}
-      />
+      <div key={index} className="w-3 h-3 flex items-center justify-center">
+        <img
+          src={isFilled ? '/assets/fill.svg' : '/assets/empty.svg'}
+          alt={isFilled ? 'filled' : 'empty'}
+          className="w-full h-full"
+        />
+      </div>
     );
   });
 
@@ -58,25 +59,30 @@ const YearlyProgressTracker = () => {
     currentYear % 400 === 0;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <div className="text-center mb-6">
-          <div className="text-sm font-medium text-gray-600 mb-1">
-            This Year
-          </div>
-          <div className="text-4xl font-bold text-gray-800 mb-1">
-            {progress}%
-          </div>
-          <div className="text-xs text-gray-500 mb-1">{currentYear}</div>
-          <div className="text-xs text-gray-400 mb-1">
-            Day {daysElapsed} of {totalDays}
-          </div>
-          <div className="text-xs text-gray-400">
-            Week {weeksElapsed} • {isLeapYear ? 'Leap Year' : 'Regular Year'}
-          </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <div className="bg-white rounded-2xl p-12 shadow-lg max-w-6xl w-full">
+        {/* Top Row */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="text-sm font-medium text-gray-600">This Year</div>
+          <div className="text-4xl font-bold text-gray-800">{progress}%</div>
         </div>
 
-        <div className="grid grid-cols-6 gap-3 w-fit mx-auto">{diamonds}</div>
+        {/* Middle - Diamonds */}
+        <div className="flex justify-center mb-8">
+          <div className="grid grid-cols-26 gap-5">{diamonds}</div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="flex justify-between items-end">
+          <div className="text-xs text-gray-500">{currentYear}</div>
+          <div className="flex items-center text-xs text-gray-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+            Day {daysElapsed}
+          </div>
+          <div className="text-xs text-gray-400">
+            Week {weeksElapsed} ({isLeapYear ? 'Leap Year' : 'Regular Year'})
+          </div>
+        </div>
       </div>
     </div>
   );

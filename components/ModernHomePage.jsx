@@ -74,7 +74,7 @@ const ModernHomePage = () => {
       title: 'Daily Progress',
       description:
         "Track your daily journey with real-time updates every minute. See how much of today you've conquered.",
-      href: '/daily',
+      href: '/day_tracker',
       icon: Clock,
       gradient: 'bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700',
       progress: 65,
@@ -83,7 +83,7 @@ const ModernHomePage = () => {
       title: 'Monthly Progress',
       description:
         'Monitor your monthly achievements and milestones. Perfect for tracking monthly goals and habits.',
-      href: '/monthly',
+      href: '/month_tracker',
       icon: Calendar,
       gradient: 'bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700',
       progress: 42,
@@ -92,7 +92,7 @@ const ModernHomePage = () => {
       title: 'Yearly Progress',
       description:
         'Visualize your annual journey. See how much of the year has passed and plan ahead effectively.',
-      href: '/yearly',
+      href: '/year_tracker',
       icon: TrendingUp,
       gradient:
         'bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700',
@@ -102,7 +102,7 @@ const ModernHomePage = () => {
       title: 'Deadline Tracker',
       description:
         'Set custom deadlines and track progress toward your most important goals and projects.',
-      href: '/deadline',
+      href: '/deadline_tracker',
       icon: Target,
       gradient: 'bg-gradient-to-br from-rose-500 via-pink-600 to-red-700',
       progress: 78,

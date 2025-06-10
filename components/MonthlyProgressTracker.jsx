@@ -46,19 +46,20 @@ const MonthlyProgressTracker = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Create 24 diamonds (4 rows × 6 columns)
-  const totalDiamonds = 24;
+  // Create 30 diamonds (5 columns × 6 rows)
+  const totalDiamonds = 30;
   const filledDiamonds = Math.round((progress / 100) * totalDiamonds);
 
   const diamonds = Array.from({ length: totalDiamonds }, (_, index) => {
     const isFilled = index < filledDiamonds;
     return (
-      <div
-        key={index}
-        className={`w-3 h-3 transform rotate-45 ${
-          isFilled ? 'bg-gray-800' : 'bg-gray-200'
-        }`}
-      />
+      <div key={index} className="w-4 h-4 flex items-center justify-center">
+        <img
+          src={isFilled ? '/assets/fill.svg' : '/assets/empty.svg'}
+          alt={isFilled ? 'filled' : 'empty'}
+          className="w-full h-full"
+        />
+      </div>
     );
   });
 
@@ -70,21 +71,27 @@ const MonthlyProgressTracker = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <div className="text-center mb-6">
-          <div className="text-sm font-medium text-gray-600 mb-1">
-            This Month
-          </div>
-          <div className="text-4xl font-bold text-gray-800 mb-1">
-            {progress}%
-          </div>
-          <div className="text-xs text-gray-500 mb-1">{monthName}</div>
-          <div className="text-xs text-gray-400">
-            Day {daysElapsed} of {totalDays}
-          </div>
+      <div className="bg-white rounded-2xl p-12 shadow-lg max-w-2xl w-full mx-4">
+        {/* Top Row */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="text-sm font-medium text-gray-600">This Month</div>
+          <div className="text-4xl font-bold text-gray-800">{progress}%</div>
         </div>
 
-        <div className="grid grid-cols-6 gap-3 w-fit mx-auto">{diamonds}</div>
+        {/* Middle - Diamonds */}
+        <div className="flex justify-center mb-8">
+          <div className="grid grid-cols-6 gap-5">{diamonds}</div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="flex justify-between items-end">
+          <div className="text-xs text-gray-500">{monthName}</div>
+          <div></div>
+          <div className="flex items-center text-xs text-gray-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+            {daysElapsed} of {totalDays}
+          </div>
+        </div>
       </div>
     </div>
   );

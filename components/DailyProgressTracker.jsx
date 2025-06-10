@@ -55,12 +55,13 @@ const DailyProgressTracker = () => {
   const diamonds = Array.from({ length: totalDiamonds }, (_, index) => {
     const isFilled = index < filledDiamonds;
     return (
-      <div
-        key={index}
-        className={`w-3 h-3 transform rotate-45 ${
-          isFilled ? 'bg-gray-800' : 'bg-gray-200'
-        }`}
-      />
+      <div key={index} className="w-4 h-4 flex items-center justify-center">
+        <img
+          src={isFilled ? '/assets/fill.svg' : '/assets/empty.svg'}
+          alt={isFilled ? 'filled' : 'empty'}
+          className="w-full h-full"
+        />
+      </div>
     );
   });
 
@@ -74,18 +75,27 @@ const DailyProgressTracker = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <div className="text-center mb-6">
-          <div className="text-sm font-medium text-gray-600 mb-1">Today</div>
-          <div className="text-4xl font-bold text-gray-800 mb-1">
-            {progress}%
-          </div>
-          <div className="text-xs text-gray-500 mb-1">{dayName}</div>
-          <div className="text-xs text-gray-500 mb-1">{dateString}</div>
-          <div className="text-xs text-gray-400">{currentTime}</div>
+      <div className="bg-white rounded-2xl p-8 shadow-lg w-96">
+        {/* Top row: Today (left) and Percentage (right) */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-sm font-medium text-gray-600">Today</div>
+          <div className="text-4xl font-bold text-gray-800">{progress}%</div>
         </div>
 
-        <div className="grid grid-cols-6 gap-3 w-fit mx-auto">{diamonds}</div>
+        {/* Middle: Diamonds with maximum space */}
+        <div className="grid grid-cols-6 gap-3 w-fit mx-auto mb-15">
+          {diamonds}
+        </div>
+
+        {/* Bottom row: Day (left), Time with dot (center), Date (right) */}
+        <div className="flex justify-between items-center text-xs">
+          <div className="text-gray-500">{dayName}</div>
+          <div className="flex items-center text-gray-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-1"></div>
+            {currentTime}
+          </div>
+          <div className="text-gray-500">{dateString}</div>
+        </div>
       </div>
     </div>
   );
