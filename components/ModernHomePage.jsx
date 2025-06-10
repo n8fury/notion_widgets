@@ -5,61 +5,125 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  ExternalLink,
+  Star,
   Target,
   TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
-const WidgetCard = ({
-  title,
-  description,
-  href,
-  icon: Icon,
-  gradient,
-  progress = 0,
-}) => {
+const GitHubStarButton = () => {
+  const [starCount, setStarCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch GitHub star count
+    const fetchStarCount = async () => {
+      try {
+        const response = await fetch(
+          'https://api.github.com/repos/n8fury/widgetyy'
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setStarCount(data.stargazers_count);
+        }
+      } catch (error) {
+        console.error('Failed to fetch star count:', error);
+        setStarCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStarCount();
+  }, []);
+
+  const handleStarClick = () => {
+    window.open(
+      'https://github.com/n8fury/widgetyy',
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
+  return (
+    <div className="fixed top-6 right-6 z-50">
+      <button
+        onClick={handleStarClick}
+        className="group flex items-center space-x-2 bg-white border border-gray-200 rounded-full px-4 py-2 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md"
+      >
+        <Star className="w-4 h-4 text-yellow-500 group-hover:text-yellow-600 transition-colors" />
+        <span className="text-gray-700 text-sm font-medium">
+          {isLoading ? '...' : starCount.toLocaleString()}
+        </span>
+        <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-gray-500 transition-colors" />
+      </button>
+    </div>
+  );
+};
+
+// Diamond component to replace the dots
+const Diamond = ({ filled }) => {
+  return (
+    <div className="w-3 h-3 flex items-center justify-center">
+      <img
+        src={filled ? '/assets/fill.svg' : '/assets/empty.svg'}
+        alt={filled ? 'filled' : 'empty'}
+        className="w-full h-full"
+      />
+    </div>
+  );
+};
+
+const WidgetCard = ({ title, description, href, icon: Icon, progress = 0 }) => {
+  // Create 12 diamonds for the progress visualization
+  const totalDiamonds = 12;
+  const filledDiamonds = Math.round((progress / 100) * totalDiamonds);
+
   return (
     <Link href={href} className="group block">
-      <div
-        className={`relative overflow-hidden rounded-3xl p-8 h-80 w-72 transition-all duration-500 hover:scale-105 hover:shadow-2xl ${gradient}`}
-      >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/20"></div>
-          <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-full bg-white/10"></div>
-        </div>
-
+      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 h-80 w-72 flex flex-col">
         {/* Content */}
-        <div className="relative z-10 h-full flex flex-col justify-between">
-          <div>
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
-              <Icon className="w-8 h-8 text-white" />
-              <div className="text-white/60 text-sm font-medium">
+              <div className="p-3 bg-gray-50 rounded-xl group-hover:bg-gray-100 transition-colors">
+                <Icon className="w-6 h-6 text-gray-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-800">
                 {progress}%
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-white/90 transition-colors">
+            <h3 className="text-xl font-semibold text-gray-800 mb-3 group-hover:text-gray-900 transition-colors">
               {title}
             </h3>
-            <p className="text-white/80 text-sm leading-relaxed">
+            <p className="text-gray-600 text-sm leading-relaxed">
               {description}
             </p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mt-6">
-            <div className="w-full bg-white/20 rounded-full h-2">
-              <div
-                className="bg-white rounded-full h-2 transition-all duration-1000"
-                style={{ width: `${progress}%` }}
-              ></div>
+          {/* Progress Section */}
+          <div className="mt-4">
+            {/* Diamond visualization - centered */}
+            <div className="flex justify-center mb-4">
+              <div className="grid grid-cols-6 gap-2">
+                {Array.from({ length: totalDiamonds }, (_, index) => (
+                  <Diamond key={index} filled={index < filledDiamonds} />
+                ))}
+              </div>
+            </div>
+
+            {/* Time indicator */}
+            <div className="flex items-center justify-between text-xs text-gray-400">
+              <span>Track your progress</span>
+              <div className="flex items-center">
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse mr-1"></div>
+                <span>Live updates</span>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Hover Effect */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
       </div>
     </Link>
   );
@@ -76,7 +140,6 @@ const ModernHomePage = () => {
         "Track your daily journey with real-time updates every minute. See how much of today you've conquered.",
       href: '/day_tracker',
       icon: Clock,
-      gradient: 'bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700',
       progress: 65,
     },
     {
@@ -85,7 +148,6 @@ const ModernHomePage = () => {
         'Monitor your monthly achievements and milestones. Perfect for tracking monthly goals and habits.',
       href: '/month_tracker',
       icon: Calendar,
-      gradient: 'bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700',
       progress: 42,
     },
     {
@@ -94,8 +156,6 @@ const ModernHomePage = () => {
         'Visualize your annual journey. See how much of the year has passed and plan ahead effectively.',
       href: '/year_tracker',
       icon: TrendingUp,
-      gradient:
-        'bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700',
       progress: 48,
     },
     {
@@ -104,7 +164,6 @@ const ModernHomePage = () => {
         'Set custom deadlines and track progress toward your most important goals and projects.',
       href: '/deadline_tracker',
       icon: Target,
-      gradient: 'bg-gradient-to-br from-rose-500 via-pink-600 to-red-700',
       progress: 78,
     },
   ];
@@ -125,41 +184,28 @@ const ModernHomePage = () => {
   }, [isAutoPlaying]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: '2s' }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: '4s' }}
-        ></div>
-      </div>
+    <div className="min-h-screen bg-gray-100 relative">
+      {/* GitHub Star Button */}
+      <GitHubStarButton />
 
-      <div className="relative z-10 container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1
-            className="text-7xl md:text-8xl font-black text-white mb-6 tracking-tight"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
+          <h1 className="text-6xl md:text-7xl font-black text-gray-800 mb-6 tracking-tight">
             Widgetyy
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Beautiful progress trackers for your daily, monthly, yearly goals
             and custom deadlines.
-            <span className="text-blue-400 font-medium">
+            <span className="text-gray-800 font-medium">
               {' '}
               Stay motivated, stay focused.
             </span>
           </p>
         </div>
 
-        {/* Slider Container */}
-        <div className="relative max-w-6xl mx-auto">
+        {/* Slider Container - Added overflow-hidden to remove scrollbar */}
+        <div className="relative max-w-6xl mx-auto overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -176,29 +222,30 @@ const ModernHomePage = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 transition-all duration-300 group shadow-sm hover:shadow-md"
           >
-            <ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronLeft className="w-6 h-6 text-gray-600 group-hover:scale-110 transition-transform" />
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 transition-all duration-300 group shadow-sm hover:shadow-md"
           >
-            <ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-gray-600 group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center mt-12 space-x-3">
+          <div className="flex justify-center mt-12 py-2 space-x-3">
             {widgets.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === currentSlide
-                    ? 'bg-white scale-125'
-                    : 'bg-white/30 hover:bg-white/50'
+                    ? 'bg-gray-800 scale-125'
+                    : 'bg-gray-300 hover:bg-gray-400'
                 }`}
+                style={{ aspectRatio: '1/1' }}
               />
             ))}
           </div>
@@ -206,22 +253,11 @@ const ModernHomePage = () => {
 
         {/* Footer */}
         <div className="text-center mt-20">
-          <div className="inline-flex items-center space-x-2 text-gray-400 text-sm">
+          <div className="inline-flex items-center space-x-2 text-gray-500 text-sm">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span>Live updates every minute</span>
           </div>
         </div>
-      </div>
-
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px',
-          }}
-        ></div>
       </div>
     </div>
   );
