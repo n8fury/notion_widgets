@@ -69,7 +69,9 @@ const YearlyProgressTracker = () => {
 
         {/* Middle - Diamonds */}
         <div className="flex justify-center mb-8">
-          <div className="grid grid-cols-26 gap-5">{diamonds}</div>
+          <div className="grid grid-cols-26 gap-5">
+            {diamonds}
+          </div>
         </div>
 
         {/* Bottom Row */}

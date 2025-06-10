@@ -182,7 +182,17 @@ const DeadlineProgressTracker = () => {
     day: 'numeric',
   });
 
-  const getTimeRemainingText = () => {
+  const getCurrentDayDate = () => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getDaysRemaining = () => {
     if (isExpired) return 'Deadline has passed';
 
     const { days, hours, minutes, type } = timeRemaining;
@@ -194,7 +204,7 @@ const DeadlineProgressTracker = () => {
       return `${minutes}m remaining`;
     } else if (type === 'month') {
       if (days > 0) {
-        return `${days} day${days !== 1 ? 's' : ''} ${hours}h remaining`;
+        return `${days} day${days !== 1 ? 's' : ''} remaining`;
       }
       return `${hours}h ${minutes}m remaining`;
     } else {
@@ -257,32 +267,38 @@ const DeadlineProgressTracker = () => {
         {/* Progress Widget */}
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="text-center mb-6">
-            <div className="text-sm font-medium text-gray-600 mb-1">
-              {deadlineTitle}
-            </div>
-            <div
-              className={`text-4xl font-bold mb-1 ${
-                isExpired ? 'text-red-600' : 'text-gray-800'
-              }`}
-            >
-              {progress}%
-            </div>
-            <div className="text-xs text-gray-500 mb-1">
-              {formattedDeadline}
-            </div>
-            <div
-              className={`text-xs ${
-                isExpired ? 'text-red-500' : 'text-gray-400'
-              }`}
-            >
-              {getTimeRemainingText()}
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-sm font-medium text-gray-600">
+                {deadlineTitle}
+              </div>
+              <div
+                className={`text-4xl font-bold ${
+                  isExpired ? 'text-red-600' : 'text-gray-800'
+                }`}
+              >
+                {progress}%
+              </div>
             </div>
           </div>
 
           <div
-            className={`grid grid-cols-${diamondConfig.cols} ${diamondConfig.gap} w-fit mx-auto`}
+            className={`grid grid-cols-${diamondConfig.cols} ${diamondConfig.gap} w-fit mx-auto mb-6`}
           >
             {diamonds}
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="text-xs text-gray-500">{getCurrentDayDate()}</div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              <div
+                className={`text-xs ${
+                  isExpired ? 'text-red-500' : 'text-gray-400'
+                }`}
+              >
+                {getDaysRemaining()}
+              </div>
+            </div>
           </div>
         </div>
       </div>
