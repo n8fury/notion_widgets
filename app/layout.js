@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'Notion Widgets',
-  description: 'Random Notion Widgets',
+  title: 'Widgetyy',
+  description: 'Stay motivated, stay focused',
 };
 
 export default function RootLayout({ children }) {
