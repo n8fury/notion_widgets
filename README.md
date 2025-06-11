@@ -220,13 +220,37 @@ Have an idea for a new widget? [Start a discussion](https://github.com/n8fury/wi
 
 ### 🔧 **Code Contributions**
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-widget`)
-3. Make your changes
-4. Add tests if applicable
-5. Commit with clear messages
-6. Push to your fork
-7. Open a Pull Request
+Ready to dive into the code? Here's how to get started:
+
+#### 🗺️ **Find Your Task**
+
+Check out our [TODO.md](./TODO.md) to find tasks that match your:
+
+- **Skill level**: From quick fixes to architectural changes
+- **Available time**: 1-hour quick wins to multi-day features
+- **Interests**: UI/UX, performance, new widgets, or infrastructure
+
+#### 🚀 **Development Workflow**
+
+1. **Fork the repository**
+2. **Pick a task** from [TODO.md](./TODO.md) and comment on the related issue
+3. **Create a feature branch** (`git checkout -b feature/amazing-widget`)
+4. **Make your changes** following our coding standards
+5. **Add tests** if applicable (see testing guidelines in TODO.md)
+6. **Commit with clear messages** (use conventional commits)
+7. **Push to your fork**
+8. **Open a Pull Request** with:
+   - Reference to the TODO item or issue
+   - Description of changes made
+   - Screenshots/demos for UI changes
+   - Testing instructions
+
+#### 💡 **Pro Tips**
+
+- Start with tasks labeled **⚡ Quick Win** for your first contribution
+- Check the **🔥 High Priority** section for maximum impact
+- Join discussions on issues before starting work to avoid duplicates
+- Don't see what you want to work on? Suggest new items in TODO.md!
 
 <!-- ## 🚀 Upcoming Widgets & Roadmap
 
