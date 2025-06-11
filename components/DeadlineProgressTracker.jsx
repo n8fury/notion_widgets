@@ -228,13 +228,21 @@ const DeadlineProgressTracker = () => {
         className={`${diamondConfig.size} flex items-center justify-center`}
       >
         {isFilled ? (
-          <div
-            className={`w-full h-full bg-blue-500 transform rotate-45 ${
-              isExpired ? 'bg-red-500' : ''
+          <img
+            src="/assets/fill.svg"
+            alt="filled"
+            className={`w-full h-full ${
+              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
             }`}
-          ></div>
+          />
         ) : (
-          <div className="w-full h-full border-2 border-gray-300 transform rotate-45"></div>
+          <img
+            src="/assets/empty.svg"
+            alt="empty"
+            className={`w-full h-full ${
+              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
+            }`}
+          />
         )}
       </div>
     );
@@ -553,12 +561,6 @@ const DeadlineProgressTracker = () => {
                         Today
                       </button>
                       <div className="flex space-x-1">
-                        {/* <button
-                          onClick={() => navigateYear('prev')}
-                          className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors"
-                        >
-                          -1 Year
-                        </button> */}
                         <button
                           onClick={() => navigateYear('next')}
                           className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors"
