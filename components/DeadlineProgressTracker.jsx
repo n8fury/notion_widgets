@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
 
 const DeadlineProgressTracker = () => {
   const [progress, setProgress] = useState(0);
@@ -16,6 +17,17 @@ const DeadlineProgressTracker = () => {
   const [customTime, setCustomTime] = useState('00:00');
   const [templateType, setTemplateType] = useState('year');
 
+  // Date picker states
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+  // Time picker states
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedHour, setSelectedHour] = useState('00');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [selectedPeriod, setSelectedPeriod] = useState('AM');
+
   // Load settings from URL parameters on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -25,7 +37,17 @@ const DeadlineProgressTracker = () => {
 
     if (urlTitle) setDeadlineTitle(decodeURIComponent(urlTitle));
     if (urlDate) setCustomDeadline(urlDate);
-    if (urlTime) setCustomTime(urlTime);
+    if (urlTime) {
+      setCustomTime(urlTime);
+      // Parse time for time picker
+      const [hours, minutes] = urlTime.split(':');
+      const hour24 = parseInt(hours);
+      const period = hour24 >= 12 ? 'PM' : 'AM';
+      const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+      setSelectedHour(hour12.toString().padStart(2, '0'));
+      setSelectedMinute(minutes);
+      setSelectedPeriod(period);
+    }
   }, []);
 
   // Update URL parameters when settings change
@@ -224,16 +246,80 @@ const DeadlineProgressTracker = () => {
     );
   });
 
-  const handleDeadlineChange = (e) => {
-    setCustomDeadline(e.target.value);
-  };
-
   const handleTitleChange = (e) => {
     setDeadlineTitle(e.target.value);
   };
 
-  const handleTimeChange = (e) => {
-    setCustomTime(e.target.value);
+  // Date picker functions
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const getDaysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month, year) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const handleDateSelect = (day) => {
+    const selectedDate = new Date(currentYear, currentMonth, day);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    setCustomDeadline(formattedDate);
+    setShowDatePicker(false);
+  };
+
+  const navigateMonth = (direction) => {
+    if (direction === 'prev') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    }
+  };
+
+  // Time picker functions
+  const hours = Array.from({ length: 12 }, (_, i) =>
+    (i + 1).toString().padStart(2, '0')
+  );
+  const minutes = Array.from({ length: 60 }, (_, i) =>
+    i.toString().padStart(2, '0')
+  );
+
+  const handleTimeChange = () => {
+    let hour24 = parseInt(selectedHour);
+    if (selectedPeriod === 'PM' && hour24 !== 12) {
+      hour24 += 12;
+    } else if (selectedPeriod === 'AM' && hour24 === 12) {
+      hour24 = 0;
+    }
+
+    const timeString = `${hour24
+      .toString()
+      .padStart(2, '0')}:${selectedMinute}`;
+    setCustomTime(timeString);
+    setShowTimePicker(false);
   };
 
   const deadlineDate = new Date(customDeadline + 'T' + customTime + ':00');
@@ -292,6 +378,69 @@ const DeadlineProgressTracker = () => {
     }
   };
 
+  // Format display time
+  const formatDisplayTime = () => {
+    const [hours, minutes] = customTime.split(':');
+    const hour24 = parseInt(hours);
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  // Format display date
+  const formatDisplayDate = () => {
+    const date = new Date(customDeadline);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  // Render calendar days
+  const renderCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+    const days = [];
+    const today = new Date();
+    const selectedDate = new Date(customDeadline);
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday =
+        today.getDate() === day &&
+        today.getMonth() === currentMonth &&
+        today.getFullYear() === currentYear;
+      const isSelected =
+        selectedDate.getDate() === day &&
+        selectedDate.getMonth() === currentMonth &&
+        selectedDate.getFullYear() === currentYear;
+
+      days.push(
+        <button
+          key={day}
+          onClick={() => handleDateSelect(day)}
+          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 hover:bg-blue-50 ${
+            isSelected
+              ? 'bg-blue-500 text-white'
+              : isToday
+              ? 'bg-blue-100 text-blue-600'
+              : 'text-gray-700 hover:text-blue-600'
+          }`}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return days;
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <div
@@ -318,34 +467,122 @@ const DeadlineProgressTracker = () => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date
                 </label>
-                <input
-                  type="date"
-                  value={customDeadline}
-                  onChange={handleDeadlineChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200"
-                />
+                <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200 flex items-center justify-between"
+                >
+                  <span>{formatDisplayDate()}</span>
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {showDatePicker && (
+                  <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4 w-80">
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        onClick={() => navigateMonth('prev')}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                      </button>
+                      <h3 className="font-semibold text-gray-800">
+                        {months[currentMonth]} {currentYear}
+                      </h3>
+                      <button
+                        onClick={() => navigateMonth('next')}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                        <div
+                          key={day}
+                          className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
+                        >
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {renderCalendarDays()}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Time
                 </label>
-                <input
-                  type="time"
-                  value={customTime}
-                  onChange={handleTimeChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200"
-                />
+                <button
+                  onClick={() => setShowTimePicker(!showTimePicker)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200 flex items-center justify-between"
+                >
+                  <span>{formatDisplayTime()}</span>
+                  <Clock className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {showTimePicker && (
+                  <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4 w-64">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-800">
+                        Select Time
+                      </h3>
+                    </div>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <select
+                        value={selectedHour}
+                        onChange={(e) => setSelectedHour(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        {hours.map((hour) => (
+                          <option key={hour} value={hour}>
+                            {hour}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-gray-500">:</span>
+                      <select
+                        value={selectedMinute}
+                        onChange={(e) => setSelectedMinute(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        {minutes
+                          .filter((_, i) => i % 5 === 0)
+                          .map((minute) => (
+                            <option key={minute} value={minute}>
+                              {minute}
+                            </option>
+                          ))}
+                      </select>
+                      <select
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                        className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                    <button
+                      onClick={handleTimeChange}
+                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm font-medium"
+                    >
+                      Set Time
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="text-xs text-gray-500">
               Template: {getTemplateName()}
             </div>
             <div className="text-xs text-gray-400">
-              Deadline: {formattedDeadline} at {customTime}
+              Deadline: {formattedDeadline} at {formatDisplayTime()}
             </div>
           </div>
         </div>
@@ -392,6 +629,17 @@ const DeadlineProgressTracker = () => {
           </div>
         </div>
       </div>
+
+      {/* Click outside to close dropdowns */}
+      {(showDatePicker || showTimePicker) && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowDatePicker(false);
+            setShowTimePicker(false);
+          }}
+        ></div>
+      )}
     </div>
   );
 };
