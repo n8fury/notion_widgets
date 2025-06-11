@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[Widgetyy Header](./public/assets//readme/Header.JPG)
+![Widgetyy Header](./public/assets//readme/Header.JPG)
 
 **Beautiful, customizable widgets for your digital workspace**
 
