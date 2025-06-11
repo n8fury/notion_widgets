@@ -21,6 +21,8 @@ const DeadlineProgressTracker = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   // Time picker states
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -226,21 +228,13 @@ const DeadlineProgressTracker = () => {
         className={`${diamondConfig.size} flex items-center justify-center`}
       >
         {isFilled ? (
-          <img
-            src="/assets/fill.svg"
-            alt="filled"
-            className={`w-full h-full ${
-              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
+          <div
+            className={`w-full h-full bg-blue-500 transform rotate-45 ${
+              isExpired ? 'bg-red-500' : ''
             }`}
-          />
+          ></div>
         ) : (
-          <img
-            src="/assets/empty.svg"
-            alt="empty"
-            className={`w-full h-full ${
-              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
-            }`}
-          />
+          <div className="w-full h-full border-2 border-gray-300 transform rotate-45"></div>
         )}
       </div>
     );
@@ -297,6 +291,43 @@ const DeadlineProgressTracker = () => {
         setCurrentMonth(currentMonth + 1);
       }
     }
+  };
+
+  const navigateYear = (direction) => {
+    if (direction === 'prev') {
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentYear(currentYear + 1);
+    }
+  };
+
+  const handleMonthSelect = (monthIndex) => {
+    setCurrentMonth(monthIndex);
+    setShowMonthPicker(false);
+  };
+
+  const handleYearSelect = (year) => {
+    setCurrentYear(year);
+    setShowYearPicker(false);
+  };
+
+  const generateYearRange = () => {
+    const currentYearActual = new Date().getFullYear();
+    const years = [];
+    for (
+      let year = currentYearActual - 5;
+      year <= currentYearActual + 20;
+      year++
+    ) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentMonth(today.getMonth());
+    setCurrentYear(today.getFullYear());
   };
 
   // Time picker functions
@@ -481,6 +512,7 @@ const DeadlineProgressTracker = () => {
 
                 {showDatePicker && (
                   <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4 w-80">
+                    {/* Header with navigation */}
                     <div className="flex items-center justify-between mb-4">
                       <button
                         onClick={() => navigateMonth('prev')}
@@ -488,9 +520,22 @@ const DeadlineProgressTracker = () => {
                       >
                         <ChevronLeft className="w-5 h-5 text-gray-600" />
                       </button>
-                      <h3 className="font-semibold text-gray-800">
-                        {months[currentMonth]} {currentYear}
-                      </h3>
+
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowMonthPicker(!showMonthPicker)}
+                          className="px-3 py-1 hover:bg-gray-100 rounded-lg text-sm font-semibold text-gray-800"
+                        >
+                          {months[currentMonth]}
+                        </button>
+                        <button
+                          onClick={() => setShowYearPicker(!showYearPicker)}
+                          className="px-3 py-1 hover:bg-gray-100 rounded-lg text-sm font-semibold text-gray-800"
+                        >
+                          {currentYear}
+                        </button>
+                      </div>
+
                       <button
                         onClick={() => navigateMonth('next')}
                         className="p-1 hover:bg-gray-100 rounded"
@@ -498,6 +543,70 @@ const DeadlineProgressTracker = () => {
                         <ChevronRight className="w-5 h-5 text-gray-600" />
                       </button>
                     </div>
+
+                    {/* Quick navigation buttons */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        onClick={goToToday}
+                        className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        Today
+                      </button>
+                      <div className="flex space-x-1">
+                        {/* <button
+                          onClick={() => navigateYear('prev')}
+                          className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          -1 Year
+                        </button> */}
+                        <button
+                          onClick={() => navigateYear('next')}
+                          className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          +1 Year
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Month picker */}
+                    {showMonthPicker && (
+                      <div className="grid grid-cols-3 gap-2 mb-4 p-2 bg-gray-50 rounded-lg">
+                        {months.map((month, index) => (
+                          <button
+                            key={month}
+                            onClick={() => handleMonthSelect(index)}
+                            className={`p-2 text-xs rounded hover:bg-blue-100 transition-colors ${
+                              index === currentMonth
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {month.slice(0, 3)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Year picker */}
+                    {showYearPicker && (
+                      <div className="grid grid-cols-4 gap-2 mb-4 p-2 bg-gray-50 rounded-lg max-h-32 overflow-y-auto">
+                        {generateYearRange().map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => handleYearSelect(year)}
+                            className={`p-2 text-xs rounded hover:bg-blue-100 transition-colors ${
+                              year === currentYear
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Calendar grid */}
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
                         <div
@@ -637,6 +746,8 @@ const DeadlineProgressTracker = () => {
           onClick={() => {
             setShowDatePicker(false);
             setShowTimePicker(false);
+            setShowYearPicker(false);
+            setShowMonthPicker(false);
           }}
         ></div>
       )}
