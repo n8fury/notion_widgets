@@ -4,21 +4,24 @@ import React, { useEffect, useState } from 'react';
 
 const DeadlineProgressTracker = () => {
   const [progress, setProgress] = useState(0);
-  const [customDeadline, setCustomDeadline] = useState('2025-12-31');
-  const [deadlineTitle, setDeadlineTitle] = useState('New Year 2026');
+  const [customDeadline, setCustomDeadline] = useState('2025-06-12');
+  const [deadlineTitle, setDeadlineTitle] = useState('Test Deadline');
   const [timeRemaining, setTimeRemaining] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
-    type: 'year', // 'day', 'month', or 'year'
+    type: 'year',
   });
   const [isExpired, setIsExpired] = useState(false);
+  const [customTime, setCustomTime] = useState('00:00');
+
   const [templateType, setTemplateType] = useState('year');
 
   useEffect(() => {
     const updateProgress = () => {
       const now = new Date();
-      const deadlineDate = new Date(customDeadline + 'T23:59:59');
+      // Set deadline to the specified date and time
+      const deadlineDate = new Date(customDeadline + 'T' + customTime + ':00');
       const msRemaining = deadlineDate.getTime() - now.getTime();
 
       if (msRemaining <= 0) {
@@ -40,8 +43,9 @@ const DeadlineProgressTracker = () => {
       let totalMs;
       let elapsedMs;
 
-      if (daysRemaining <= 1) {
-        // Less than 1 day - use daily template
+      // Improved boundary logic
+      if (daysRemaining <= 2) {
+        // Less than or equal to 2 days - use daily template
         currentTemplateType = 'day';
         startDate = new Date(
           now.getFullYear(),
@@ -51,41 +55,38 @@ const DeadlineProgressTracker = () => {
           0,
           0
         );
-        const endOfDay = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate(),
-          23,
-          59,
-          59
-        );
-        const deadlineInDay = deadlineDate > endOfDay ? endOfDay : deadlineDate;
 
-        totalMs = deadlineInDay.getTime() - startDate.getTime();
+        // For daily template, calculate progress within the current day period
+        const nextDay = new Date(startDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        // Use the actual deadline or next day, whichever comes first
+        const endDate = deadlineDate < nextDay ? deadlineDate : nextDay;
+
+        totalMs = endDate.getTime() - startDate.getTime();
         elapsedMs = now.getTime() - startDate.getTime();
 
         setTimeRemaining({
-          days: 0,
-          hours: Math.floor(hoursRemaining),
+          days: Math.floor(daysRemaining),
+          hours: Math.floor(hoursRemaining % 24),
           minutes: Math.floor(minutesRemaining % 60),
           type: 'day',
         });
-      } else if (daysRemaining <= 31) {
-        // Less than 1 month - use monthly template
+      } else if (daysRemaining <= 60) {
+        // Less than or equal to 60 days (2 months) - use monthly template
         currentTemplateType = 'month';
         startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-        const endOfMonth = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0,
-          23,
-          59,
-          59
-        );
-        const deadlineInMonth =
-          deadlineDate > endOfMonth ? endOfMonth : deadlineDate;
 
-        totalMs = deadlineInMonth.getTime() - startDate.getTime();
+        // Calculate end date as either deadline or 2 months from start
+        const twoMonthsLater = new Date(startDate);
+        twoMonthsLater.setMonth(twoMonthsLater.getMonth() + 2);
+        twoMonthsLater.setDate(0); // Last day of previous month
+        twoMonthsLater.setHours(23, 59, 59);
+
+        const deadlineInRange =
+          deadlineDate > twoMonthsLater ? twoMonthsLater : deadlineDate;
+
+        totalMs = deadlineInRange.getTime() - startDate.getTime();
         elapsedMs = now.getTime() - startDate.getTime();
 
         setTimeRemaining({
@@ -95,13 +96,25 @@ const DeadlineProgressTracker = () => {
           type: 'month',
         });
       } else {
-        // More than 1 month - use yearly template
+        // More than 60 days - use yearly template
         currentTemplateType = 'year';
-        const oneYearBefore = new Date(
-          deadlineDate.getTime() - 365 * 24 * 60 * 60 * 1000
-        );
-        const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-        startDate = oneYearBefore > startOfYear ? oneYearBefore : startOfYear;
+        const currentYear = now.getFullYear();
+        const deadlineYear = deadlineDate.getFullYear();
+
+        if (deadlineYear === currentYear) {
+          // Deadline is in current year
+          startDate = new Date(currentYear, 0, 1, 0, 0, 0);
+        } else {
+          // Deadline is in future year, show progress from one year before deadline
+          startDate = new Date(
+            deadlineYear - 1,
+            deadlineDate.getMonth(),
+            deadlineDate.getDate(),
+            0,
+            0,
+            0
+          );
+        }
 
         totalMs = deadlineDate.getTime() - startDate.getTime();
         elapsedMs = now.getTime() - startDate.getTime();
@@ -116,8 +129,14 @@ const DeadlineProgressTracker = () => {
 
       setTemplateType(currentTemplateType);
 
-      if (elapsedMs < 0) {
+      // Ensure progress calculation is always valid
+      if (elapsedMs <= 0) {
         setProgress(0);
+        return;
+      }
+
+      if (totalMs <= 0) {
+        setProgress(100);
         return;
       }
 
@@ -129,7 +148,7 @@ const DeadlineProgressTracker = () => {
     const interval = setInterval(updateProgress, 60000);
 
     return () => clearInterval(interval);
-  }, [customDeadline]);
+  }, [customDeadline, customTime]);
 
   // Diamond configuration based on template type
   const getDiamondConfig = () => {
@@ -137,7 +156,7 @@ const DeadlineProgressTracker = () => {
       case 'day':
         return { total: 24, cols: 6, size: 'w-4 h-4', gap: 'gap-5' };
       case 'month':
-        return { total: 30, cols: 5, size: 'w-4 h-4', gap: 'gap-5' };
+        return { total: 30, cols: 6, size: 'w-4 h-4', gap: 'gap-5' };
       case 'year':
         return { total: 182, cols: 26, size: 'w-3 h-3', gap: 'gap-5' };
       default:
@@ -155,13 +174,23 @@ const DeadlineProgressTracker = () => {
         key={index}
         className={`${diamondConfig.size} flex items-center justify-center`}
       >
-        <img
-          src={isFilled ? '/assets/fill.svg' : '/assets/empty.svg'}
-          alt={isFilled ? 'filled' : 'empty'}
-          className={`w-full h-full ${
-            isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
-          }`}
-        />
+        {isFilled ? (
+          <img
+            src="/assets/fill.svg"
+            alt="filled"
+            className={`w-full h-full ${
+              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
+            }`}
+          />
+        ) : (
+          <img
+            src="/assets/empty.svg"
+            alt="empty"
+            className={`w-full h-full ${
+              isExpired ? 'filter hue-rotate-0 saturate-150 brightness-75' : ''
+            }`}
+          />
+        )}
       </div>
     );
   });
@@ -174,7 +203,11 @@ const DeadlineProgressTracker = () => {
     setDeadlineTitle(e.target.value);
   };
 
-  const deadlineDate = new Date(customDeadline);
+  const handleTimeChange = (e) => {
+    setCustomTime(e.target.value);
+  };
+
+  const deadlineDate = new Date(customDeadline + 'T' + customTime + ':00');
   const formattedDeadline = deadlineDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -198,10 +231,15 @@ const DeadlineProgressTracker = () => {
     const { days, hours, minutes, type } = timeRemaining;
 
     if (type === 'day') {
-      if (hours > 0) {
-        return `${hours}h ${minutes}m remaining`;
+      // For daily template, if less than 1 full day remaining, don't show days
+      if (days < 1) {
+        if (hours > 0) {
+          return `${hours}h ${minutes}m remaining`;
+        }
+        return `${minutes}m remaining`;
+      } else {
+        return `${days} day${days !== 1 ? 's' : ''} ${hours}h remaining`;
       }
-      return `${minutes}m remaining`;
     } else if (type === 'month') {
       if (days > 0) {
         return `${days} day${days !== 1 ? 's' : ''} remaining`;
@@ -246,20 +284,39 @@ const DeadlineProgressTracker = () => {
                 type="text"
                 value={deadlineTitle}
                 onChange={handleTitleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200"
                 placeholder="Enter deadline name"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date
-              </label>
-              <input
-                type="date"
-                value={customDeadline}
-                onChange={handleDeadlineChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={customDeadline}
+                  onChange={handleDeadlineChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={customTime}
+                  onChange={handleTimeChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
+            </div>
+            <div className="text-xs text-gray-500">
+              Template: {getTemplateName()}
+            </div>
+            <div className="text-xs text-gray-400">
+              Deadline: {formattedDeadline} at {customTime}
             </div>
           </div>
         </div>
@@ -290,7 +347,11 @@ const DeadlineProgressTracker = () => {
           <div className="flex justify-between items-center">
             <div className="text-xs text-gray-500">{getCurrentDayDate()}</div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  isExpired ? 'bg-red-500' : 'bg-green-500 animate-pulse'
+                }`}
+              ></div>
               <div
                 className={`text-xs ${
                   isExpired ? 'text-red-500' : 'text-gray-400'
