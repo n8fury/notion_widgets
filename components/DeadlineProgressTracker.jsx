@@ -14,8 +14,37 @@ const DeadlineProgressTracker = () => {
   });
   const [isExpired, setIsExpired] = useState(false);
   const [customTime, setCustomTime] = useState('00:00');
-
   const [templateType, setTemplateType] = useState('year');
+
+  // Load settings from URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTitle = urlParams.get('title');
+    const urlDate = urlParams.get('date');
+    const urlTime = urlParams.get('time');
+
+    if (urlTitle) setDeadlineTitle(decodeURIComponent(urlTitle));
+    if (urlDate) setCustomDeadline(urlDate);
+    if (urlTime) setCustomTime(urlTime);
+  }, []);
+
+  // Update URL parameters when settings change
+  useEffect(() => {
+    const updateURL = () => {
+      const params = new URLSearchParams();
+      params.set('title', encodeURIComponent(deadlineTitle));
+      params.set('date', customDeadline);
+      params.set('time', customTime);
+
+      const newURL = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newURL);
+    };
+
+    // Only update URL if we have meaningful values (not initial defaults)
+    if (deadlineTitle && customDeadline && customTime) {
+      updateURL();
+    }
+  }, [deadlineTitle, customDeadline, customTime]);
 
   useEffect(() => {
     const updateProgress = () => {
